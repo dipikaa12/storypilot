@@ -1,13 +1,12 @@
 import { loadSettings } from './storage'
 
-const API_URL = 'https://api.anthropic.com/v1/messages'
-const MODEL = 'claude-sonnet-4-6'
+const API_URL = '/api/chat'
 
 export function getApiKey() {
-  const envKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-  if (envKey?.trim()) return envKey.trim()
   const settings = loadSettings()
-  return settings.apiKey?.trim() ?? ''
+  const localKey = settings.apiKey?.trim()
+  if (localKey) return localKey
+  return import.meta.env.VITE_ANTHROPIC_API_KEY?.trim() ?? ''
 }
 
 export async function callAnthropic(prompt) {
@@ -20,14 +19,10 @@ export async function callAnthropic(prompt) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }],
+      apiKey,
     }),
   })
 
