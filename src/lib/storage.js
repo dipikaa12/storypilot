@@ -110,3 +110,15 @@ export function saveHistory(history) {
 export function createWorkstreamId() {
   return crypto.randomUUID()
 }
+
+export function deleteHistoryRecord(id) {
+  const all = loadHistory()
+  const updated = all.filter(r => r.id !== id)
+  write(KEYS.history, updated)
+}
+
+export function clearHistory(workstreamId) {
+  const all = loadHistory()
+  const updated = all.filter(r => r.workstreamId !== workstreamId)
+  write(KEYS.history, updated)
+}

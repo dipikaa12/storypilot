@@ -78,7 +78,17 @@ Create a Jira ticket for the requirement above. Include:
 ${opts.include === 'ac+dod' ? '- Definition of done section' : ''}
 ${opts.epic?.trim() ? `- Label or reference to epic: ${opts.epic.trim()}` : ''}
 
-Use plain text suitable for pasting into Jira. Return only the ticket content — no preamble.`
+Use plain text suitable for pasting into Jira. Return only the ticket content — no preamble.
+
+Write all stories strictly from the business user perspective.
+Do not include any technical implementation details such as:
+- Primary keys, foreign keys, or data types
+- Table names, schema design, or dimension/fact terminology  
+- ETL pipeline logic or data load processes
+- Nullability, indexing, or database constraints
+
+Focus only on what the business user needs to see, filter, compare, or analyze in their reports.
+The how is for the engineering team to determine.`
 }
 
 export function confluencePrompt(input, workstream, opts) {
