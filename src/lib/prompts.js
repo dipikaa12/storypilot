@@ -111,3 +111,31 @@ Include user stories in the appropriate section.
 ${opts.include !== 'stories-only' ? 'Include acceptance criteria where relevant.' : ''}
 Return only the Confluence wiki markup — no preamble or explanation.`
 }
+
+export function coveragePrompt(brd, stories, workstream) {
+  const ctx = buildContext(workstream)
+  return `You are a senior product manager doing a requirements coverage analysis.
+
+${ctx}
+
+BRD Requirements:
+${brd}
+
+Existing User Stories:
+${stories}
+
+Analyse coverage and output three clearly labelled sections:
+
+COVERED
+List each requirement that is clearly and fully addressed by an existing story. Reference the requirement and the story that covers it.
+
+PARTIALLY COVERED
+List each requirement that is touched by an existing story but has gaps -- missing edge cases, incomplete AC, or only partially addressed. Be specific about what is missing.
+
+NOT COVERED
+List each requirement with no corresponding story. These are gaps that need new stories written.
+
+End with a short prioritised list of recommended stories to write next, based on the gaps identified.
+
+Be specific. Reference requirement numbers where they exist. Do not be vague.`
+}
