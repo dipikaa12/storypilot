@@ -41,54 +41,43 @@ function buildOptsBlock(opts) {
 }
 
 export function storiesPrompt(input, workstream, opts) {
-  return `You are a product analyst writing user stories for a software team.
-
+  return `You are a product analyst writing user stories as Jira-ready tickets for a software team.
+ 
 ${buildContext(workstream)}
-
+ 
 Generation options:
 ${buildOptsBlock(opts)}
-
+ 
 Requirement or BRD excerpt:
 ${input}
-
-Write clear, actionable user stories for the requirement above.
-Use the story format specified in the generation options.
-Follow the style of the example story in the workstream context.
-${opts.include === 'stories-only' ? 'Do not include acceptance criteria or definition of done.' : ''}
-${opts.include === 'ac' ? 'Include acceptance criteria for each story. Do not include definition of done.' : ''}
-${opts.include === 'ac+dod' ? 'Include acceptance criteria and definition of done for each story.' : ''}
-Return only the stories — no preamble or explanation.`
-}
-
-export function jiraPrompt(input, workstream, opts) {
-  return `You are a product analyst creating Jira tickets for a software team.
-
-${buildContext(workstream)}
-
-Generation options:
-${buildOptsBlock(opts)}
-
-Requirement or BRD excerpt:
-${input}
-
-Create a Jira ticket for the requirement above. Include:
-- Summary (concise title)
-- Description
-- Acceptance criteria as a checklist
+ 
+First, determine how many distinct stories this requirement breaks down into. Some
+requirements are a single story; many are not — do not force everything into one
+story if the requirement genuinely covers multiple pieces of functionality.
+ 
+For EACH distinct story, output:
+- Summary (concise ticket title)
+- Description, written in the story format specified in the generation options,
+  following the style of the example story in the workstream context
+${opts.include !== 'stories-only' ? '- Acceptance criteria as a checklist' : ''}
 ${opts.include === 'ac+dod' ? '- Definition of done section' : ''}
 ${opts.epic?.trim() ? `- Label or reference to epic: ${opts.epic.trim()}` : ''}
-
-Use plain text suitable for pasting into Jira. Return only the ticket content — no preamble.
-
+ 
+Separate each story with a line of dashes (---) between them so they can be told
+apart when pasted into Jira individually.
+ 
 Write all stories strictly from the business user perspective.
 Do not include any technical implementation details such as:
 - Primary keys, foreign keys, or data types
-- Table names, schema design, or dimension/fact terminology  
+- Table names, schema design, or dimension/fact terminology
 - ETL pipeline logic or data load processes
 - Nullability, indexing, or database constraints
-
+ 
 Focus only on what the business user needs to see, filter, compare, or analyze in their reports.
-The how is for the engineering team to determine.`
+The how is for the engineering team to determine.
+ 
+Use plain text suitable for pasting directly into Jira. Return only the ticket content —
+no preamble or explanation.`
 }
 
 export function confluencePrompt(input, workstream, opts) {
@@ -138,4 +127,50 @@ List each requirement with no corresponding story. These are gaps that need new 
 End with a short prioritised list of recommended stories to write next, based on the gaps identified.
 
 Be specific. Reference requirement numbers where they exist. Do not be vague.`
+}
+
+export function analysisPrompt(rawInput, workstream) {
+  const contextBlock = workstream ? buildContext(workstream) : "";
+ 
+  return `${contextBlock}
+ 
+You are extracting structured, numbered business requirements from raw source content.
+The source may be messy: pasted Excel data, report descriptions, stakeholder notes, meeting
+notes, or a mix. Your job is to identify every discrete requirement and return it as
+structured data.
+ 
+RULES:
+- Extract every distinct requirement, rule, or piece of functionality described in the source.
+- Rewrite each as a single clear sentence in the requirement field. Do not copy the raw
+  text verbatim if it is a fragment, table row, or notes — turn it into a complete requirement
+  statement. If the source text is already a clean requirement sentence, keep it close to
+  the original wording.
+- Assign a category to every requirement. Infer categories from the content itself
+  (e.g. by report tab, feature area, or workflow stage mentioned in the source).
+  Do not use a single catch-all category unless the source genuinely only covers one area.
+  Reuse the same category label consistently across requirements that belong together.
+- Include a short sourceExcerpt for each requirement: the original snippet (max ~15 words)
+  that this requirement was drawn from, so it can be traced back to the source.
+- Number requirement ids sequentially as REQ-01, REQ-02, etc., in the order they appear
+  in the source, regardless of category.
+- If the source contains something that is clearly not a requirement (a comment, a question,
+  a status note), do not include it. If unsure, include it and let the user decide.
+ 
+Return ONLY a JSON array. No markdown code fences, no prose before or after, no explanation.
+If the source contains no extractable requirements, return an empty array: []
+ 
+Example shape:
+[
+  {
+    "id": "REQ-01",
+    "requirement": "The report must show mature location status based on lease start date.",
+    "category": "Mature Locations",
+    "sourceExcerpt": "mature loc def - based on lease start??"
+  }
+]
+ 
+SOURCE CONTENT TO ANALYZE:
+"""
+${rawInput}
+"""`;
 }

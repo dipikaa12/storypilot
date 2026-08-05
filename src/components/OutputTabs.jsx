@@ -3,7 +3,6 @@ import CopyButton from './CopyButton'
 
 const TAB_CONFIG = {
   stories: { label: 'Stories' },
-  jira: { label: 'Jira' },
   confluence: { label: 'Confluence' },
 }
 

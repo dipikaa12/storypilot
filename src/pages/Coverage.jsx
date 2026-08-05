@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useWorkstream } from '../hooks/useWorkstream'
 import { callAnthropic } from '../lib/anthropic'
 import { coveragePrompt } from '../lib/prompts'
+import { useNavigate } from 'react-router-dom'
+import { setPendingGapsText } from '../lib/storage'
 
 export default function Coverage() {
   const { activeWorkstream } = useWorkstream()
@@ -11,6 +13,7 @@ export default function Coverage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const navigate = useNavigate()
 
   async function analyse() {
     if (!brdInput.trim() || !storiesInput.trim()) {
@@ -100,8 +103,9 @@ export default function Coverage() {
           <div className="mt-4">
             <button
               onClick={() => {
-                const params = new URLSearchParams({ gaps: output })
-                window.location.href = `/generate?${params.toString()}`
+                const notCovered = output.split('NOT COVERED')[1] || output
+                setPendingGapsText(notCovered.trim())
+                navigate('/generate')
               }}
               className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
             >

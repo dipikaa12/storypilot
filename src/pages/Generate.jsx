@@ -1,24 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import OutputTabs from '../components/OutputTabs'
 import { useApp } from '../context/AppContext'
 import { useWorkstream } from '../hooks/useWorkstream'
 import { callAnthropic, getApiKey } from '../lib/anthropic'
+import { consumePendingRequirements, consumePendingGapsText } from "../lib/storage";
 import {
   confluencePrompt,
-  jiraPrompt,
   storiesPrompt,
 } from '../lib/prompts'
 
 const OUTPUT_OPTIONS = [
   { key: 'stories', label: 'Stories' },
-  { key: 'jira', label: 'Jira' },
   { key: 'confluence', label: 'Confluence' },
 ]
 
 const PROMPT_MAP = {
   stories: storiesPrompt,
-  jira: jiraPrompt,
   confluence: confluencePrompt,
 }
 
@@ -31,14 +29,30 @@ export default function Generate() {
   const [epic, setEpic] = useState('')
   const [storyFormat, setStoryFormat] = useState('standard')
   const [include, setInclude] = useState('ac')
-  const [selectedOutputs, setSelectedOutputs] = useState(['stories', 'jira', 'confluence'])
-  const [outputs, setOutputs] = useState({ stories: '', jira: '', confluence: '' })
+  const [selectedOutputs, setSelectedOutputs] = useState(['stories', 'confluence'])
+  const [outputs, setOutputs] = useState({ stories: '', confluence: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasGenerated, setHasGenerated] = useState(false)
   const [inputError, setInputError] = useState('')
 
   const hasApiKey = Boolean(getApiKey())
+
+  useEffect(() => {
+  const pendingReqs = consumePendingRequirements();
+  if (pendingReqs?.length) {
+    const combined = pendingReqs
+      .map((r) => `[${r.category}] ${r.requirement}`)
+      .join("\n");
+    setInput(combined);
+    return;
+  }
+
+  const gapsText = consumePendingGapsText();
+  if (gapsText) {
+    setInput(gapsText);
+  }
+}, []);
 
   function toggleOutput(key) {
     setSelectedOutputs((prev) =>
@@ -68,7 +82,7 @@ export default function Generate() {
     const opts = { storyFormat, include, epic }
 
     setLoading(true)
-    const results = { stories: '', jira: '', confluence: '' }
+    const results = { stories: '', confluence: '' }
 
     try {
       for (const key of selectedOutputs) {
@@ -88,11 +102,10 @@ export default function Generate() {
         mode: 'single',
         outputs: {
           stories: results.stories,
-          jira: results.jira,
           confluence: results.confluence,
         },
         batchItems: [],
-        pushed: { confluence: false, jira: false },
+        pushed: { confluence: false },
         createdAt: new Date().toISOString(),
       }
       setHistory([record, ...history])
@@ -111,7 +124,7 @@ export default function Generate() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Generate</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Convert a requirement into stories, Jira tickets, and Confluence pages.
+          Convert a requirement into stories and Confluence pages.
           {activeWorkstream && (
             <span>
               {' '}

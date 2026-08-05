@@ -122,3 +122,57 @@ export function clearHistory(workstreamId) {
   const updated = all.filter(r => r.workstreamId !== workstreamId)
   write(KEYS.history, updated)
 }
+
+const HANDOFF_KEY = "sp-session:pendingRequirements";
+
+/**
+ * Stash selected requirements for the Generate page to pick up.
+ * @param {Array} requirements - subset of analysis output the user selected
+ */
+export function setPendingRequirements(requirements) {
+  try {
+    sessionStorage.setItem(HANDOFF_KEY, JSON.stringify(requirements));
+  } catch (err) {
+    console.error("Failed to stash pending requirements:", err);
+  }
+}
+
+/**
+ * Read and clear the pending requirements. Clearing on read prevents stale
+ * data from resurfacing if the user navigates back to Generate later without
+ * coming from Analysis again.
+ * @returns {Array|null}
+ */
+export function consumePendingRequirements() {
+  try {
+    const raw = sessionStorage.getItem(HANDOFF_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(HANDOFF_KEY);
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error("Failed to read pending requirements:", err);
+    return null;
+  }
+}
+
+const GAPS_HANDOFF_KEY = "sp-session:pendingGapsText";
+ 
+export function setPendingGapsText(text) {
+  try {
+    sessionStorage.setItem(GAPS_HANDOFF_KEY, text);
+  } catch (err) {
+    console.error("Failed to stash pending gaps text:", err);
+  }
+}
+ 
+export function consumePendingGapsText() {
+  try {
+    const text = sessionStorage.getItem(GAPS_HANDOFF_KEY);
+    if (!text) return null;
+    sessionStorage.removeItem(GAPS_HANDOFF_KEY);
+    return text;
+  } catch (err) {
+    console.error("Failed to read pending gaps text:", err);
+    return null;
+  }
+}

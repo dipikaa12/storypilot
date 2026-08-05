@@ -6,6 +6,7 @@ import Context from './pages/Context'
 import Coverage from './pages/Coverage'
 import History from './pages/History'
 import Settings from './pages/Settings'
+import Analysis from "./pages/Analysis";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Generate />} />
+            <Route path="analysis" element={<Analysis />} />
             <Route path="context" element={<Context />} />
             <Route path="coverage" element={<Coverage />} />
             <Route path="history" element={<History />} />

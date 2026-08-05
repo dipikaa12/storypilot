@@ -3,6 +3,7 @@ import { useWorkstream } from '../hooks/useWorkstream'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Generate', end: true },
+  { to: '/analysis', label: 'Analysis'},
   { to: '/context', label: 'Context' },
   { to: '/coverage', label: 'Coverage' },
   { to: '/history', label: 'History' },
